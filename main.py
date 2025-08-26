@@ -1,32 +1,25 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
 
-# Create app
-app = FastAPI(title="ML Model API", description="A simple ML model deployed on Cloud Run", version="1.0")
+app = FastAPI()
 
-# Input schema
-class InputData(BaseModel):
-    features: list
-
-# Load trained model (saved earlier as model.pkl)
-model = joblib.load("model.pkl")
-
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to ML Model API on Cloud Run!"}
+# ✅ Allow frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or replace "*" with your frontend domain later for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+@app.post("/")
+def hi():
+    return "<h1>hi<h1>"
+# Load model
+model = joblib.load("iris_model.pkl")
 
 @app.post("/predict")
-def predict(data: InputData):
-    try:
-        X = np.array(data.features).reshape(1, -1)
-        prediction = model.predict(X)
-        return {"prediction": prediction.tolist()}
-    except Exception as e:
-        return {"error": str(e)}
-
-# Run locally (for testing)
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+def predict(features: list):
+    prediction = model.predict([features])
+    return {"prediction": int(prediction[0])}
