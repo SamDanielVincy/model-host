@@ -1,26 +1,32 @@
-# main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
-import pickle
+import uvicorn
+import joblib
 import numpy as np
 
-# Load trained model
-with open("model.pkl", "rb") as f:
-    model = pickle.load(f)
+# Create app
+app = FastAPI(title="ML Model API", description="A simple ML model deployed on Cloud Run", version="1.0")
 
-# FastAPI app
-app = FastAPI(title="Iris Prediction API")
-
-# Input format
+# Input schema
 class InputData(BaseModel):
-    sepal_length: float
-    sepal_width: float
-    petal_length: float
-    petal_width: float
+    features: list
 
-# Prediction endpoint
+# Load trained model (saved earlier as model.pkl)
+model = joblib.load("model.pkl")
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to ML Model API on Cloud Run!"}
+
 @app.post("/predict")
 def predict(data: InputData):
-    features = np.array([[data.sepal_length, data.sepal_width, data.petal_length, data.petal_width]])
-    prediction = model.predict(features)
-    return {"prediction": int(prediction[0])}
+    try:
+        X = np.array(data.features).reshape(1, -1)
+        prediction = model.predict(X)
+        return {"prediction": prediction.tolist()}
+    except Exception as e:
+        return {"error": str(e)}
+
+# Run locally (for testing)
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
