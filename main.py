@@ -13,9 +13,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.post("/")
-def hi():
-    return "<h1>hi<h1>"
+
 # Load model
 model = joblib.load("iris_model.pkl")
 
