@@ -1,5 +1,5 @@
-flask
-gunicorn
+fastapi
+uvicorn
 scikit-learn
-pandas
-numpy
+joblib
+pydantic
